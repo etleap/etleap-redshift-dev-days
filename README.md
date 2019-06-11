@@ -39,7 +39,7 @@ Leave the Additional Properties at their defaults and click 'Create Connection'
 Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
 
 - Name: `Website Click Events`
-- Access ID: `AKIATIHTNYTXSUK6Y553`
+- Access ID: (see email)
 - Secret Key: (see email)
 - Data Bucket: `etleap-redshift-workshop`
 - Base Directory: `click-events`
