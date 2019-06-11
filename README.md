@@ -27,7 +27,12 @@ In the rest of this section we'll connect Etleap to the data sources and Redshif
 
 ### Set up the Redshift connection
 
-Set up the Redshift connection [here](https://app.etleap.com/#/connections/new/REDSHIFT). You'll need the values from CloudFormation available on the [Outputs page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/outputs).
+Set up the Redshift connection [here](https://app.etleap.com/#/connections/new/REDSHIFT). 
+- Leave the name as `Amazon Redshift`
+- Connection Method: Direct
+- For the rest of the values, you'll need the values from CloudFormation available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). 
+
+Leave the Additional Properties at their defaults and click 'Create Connection'
 
 ### Set up the S3 Input connection
 
@@ -52,6 +57,8 @@ Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQ
 - Username: `etl`
 - Password: `Gpte7q3IOtzP`
 - Database: `webstore`
+
+Leave the Additional Properties at their defaults and click 'Create Connection'
 
 ### Set up the S3-to-Redshift pipeline
 
@@ -96,11 +103,11 @@ Once the pipelines have run we'll run a query that uses both datasets: we'll fig
 ```
 WITH users_with_purchases AS (
   SELECT DISTINCT p.user_id
-    FROM purchases
+    FROM purchases p
 ), clicks_per_user AS (
-  SELECT user_id, COUNT(*) AS clicks
-    FROM click_events
-   GROUP BY user_id)
+  SELECT userid, COUNT(*) AS clicks
+    FROM Website_Click_Events
+   GROUP BY userid)
 SELECT
   SUM(CASE WHEN uwp.user_id IS NOT NULL THEN cpu.clicks ELSE 0 END) /
   SUM(CASE WHEN uwp.user_id IS NOT NULL THEN 1 ELSE 0 END) AS with_purchase,
@@ -108,7 +115,7 @@ SELECT
   SUM(CASE WHEN uwp.user_id IS NULL THEN 1 ELSE 0 END) AS without_purchase
   FROM clicks_per_user cpu
   LEFT JOIN users_with_purchases uwp
-    ON cpu.user_id = uwp.user_id
+    ON cpu.userid = uwp.user_id
 ```
 
 As you can see, users that have made a purchase have clicked about twice as much on average as those who haven't made a purchase.
