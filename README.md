@@ -1,0 +1,1 @@
+# etleap-redshift-dev-days
