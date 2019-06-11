@@ -67,7 +67,7 @@ Leave the Additional Properties at their defaults and click 'Create Connection'
 - This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
 - Click 'Wrangle Data'.
 - Wrangle the data. At a minimum, specify the following rules:
-  - Split out the event type from the JSON object: highlight the whitespace between the event data and the JSON object in the first row, and pick the first suggestion on the right.
+  - Split out the event type from the JSON object: highlight the whitespace between the event data and the JSON object in the first row, and pick the suggestion on the right that says `Split data once on ' ' with quote "`.
   - Rename the event type column: double-click the header where it says 'split', enter 'event_type', and click enter.
   - Parse the JSON object: single-click the 'split1' column and pick the first suggestion on the right.
 - Click 'Next'.
