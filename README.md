@@ -40,7 +40,7 @@ Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S
 
 - Name: `Website Click Events`
 - Access ID: `AKIATIHTNYTXSUK6Y553`
-- Secret Key: `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`
+- Secret Key: (see email)
 - Data Bucket: `etleap-redshift-workshop`
 - Base Directory: `click-events`
 
