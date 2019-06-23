@@ -38,11 +38,11 @@ Leave the Additional Properties at their defaults and click 'Create Connection'
 
 Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
 
-- Name: `Website Click Events`
+- Name: `Website Events`
 - Access ID: (see email)
 - Secret Key: (see email)
-- Data Bucket: `etleap-redshift-workshop`
-- Base Directory: `click-events`
+- Data Bucket: `etleap-redshift-devdays`
+- Base Directory: `events`
 
 Click 'Verify Permissions' and then 'Create Connection'.
 
@@ -73,8 +73,8 @@ Leave the Additional Properties at their defaults and click 'Create Connection'
 - Click 'Next'.
 - Pick your Redshift cluster as the destination.
 - Specify the following destination values:
-  - Table name: `Website_Click_Events`
-  - Pipeline name: `Website Click Events`
+  - Table name: `Website_Events`
+  - Pipeline name: `Website Events`
 - Click 'Next'.
 - Click 'Start ETLing'.
 
