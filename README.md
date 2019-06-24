@@ -9,7 +9,7 @@ In this workshop you'll learn how to create a Redshift data warehouse that centr
 
 ## 1. Set up AWS VPC with Redshift
 
-Log into your AWS account and [go to the page to create the stack for this workshop](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Fs3.amazonaws.com%2Fetleap-redshift-workshop%2Fcloudformation-templates%2Fcf-template.yaml&stackName=EtleapRedshiftDevDayStack). It sets up a new VPC with a Redshift cluster along with the security group rules necessary for accessing it from Etleap.
+Log into your AWS account and [go to the page to create the stack for this workshop](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Fs3.amazonaws.com%2Fetleap-redshift-workshop%2Fcloudformation-templates%2Fcf-template.yaml&stackName=EtleapRedshiftDevDayStack). It sets up a new VPC with a Redshift cluster along with the security group rules necessary for accessing it from Etleap. Make sure the AWS region selected is N. Virginia (us-east-1).
 
 All you need to do is specify a root password for your Redshift cluster. This must consist of at least 8 alphanumeric characters only, and must have contain a lower-case letter, an upper-case letter, and a number.
 
