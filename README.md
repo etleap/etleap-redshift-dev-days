@@ -7,13 +7,32 @@ User behavior data is available through events that have been captured with a we
 In this workshop you'll learn how to create a Redshift data warehouse that centralizes data from both these data sources. This way your analysts can run queries across the data sets.
 
 
-## 1. Set up AWS VPC with Redshift
+## Prerequisites
 
-Log into your AWS account and [go to the page to create the stack for this workshop](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Fs3.amazonaws.com%2Fetleap-redshift-workshop%2Fcloudformation-templates%2Fcf-template.yaml&stackName=EtleapRedshiftDevDayStack). It sets up a new VPC with a Redshift cluster along with the security group rules necessary for accessing it from Etleap. Make sure the AWS region selected is N. Virginia (us-east-1).
+You must have an AWS account and an [AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/) user with sufficient permissions to interact with the AWS Management Console and creating various resources. Your IAM permissions must also include access to create IAM roles and policies created by the AWS CloudFormation template.
 
-All you need to do is specify a root password for your Redshift cluster. This must consist of at least 8 alphanumeric characters only, and must have contain a lower-case letter, an upper-case letter, and a number.
 
-Click 'Create stack' and wait for the creation to complete.
+## 1. Set up an AWS VPC with Redshift, Glue, and S3
+
+In this section we'll set up a new VPC with the following resources:
+
+- A Redshift cluster along with the security group rules necessary for accessing it from Etleap. 
+- An S3 bucket to host our data lake.
+- A Glue Catalog database to store data lake metadata.
+- An IAM role that will be assigned to the Redshift cluster and used to access the data lake.
+- An IAM user that will be used by Etleap to access the data lake.
+
+Log into your AWS account and [go to the page to create the stack for this workshop](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Fs3.amazonaws.com%2Fetleap-redshift-workshop%2Fcloudformation-templates%2Fcf-template.yaml&stackName=EtleapRedshiftDevDayStack). 
+
+- Make sure the AWS region selected is N. Virginia (us-east-1).
+- Specify a root password for your Redshift cluster. This must consist of at least 8 alphanumeric characters only, and must have contain a lower-case letter, an upper-case letter, and a number.
+- The other fields have sensible defaults, but feel free to modify as you see fit.
+
+After entering the all the parameter values: 
+- Click 'Next'.
+- On the next screen, enter any required tags, an IAM role, or any advanced options, and then click 'Next'.
+- Review the details on the final screen, Check the box for 'I acknowledge that AWS CloudFormation might create IAM resources' and then choose 'Create' to start building the resources.
+- Click 'Create stack' and wait for the creation to complete.
 
 
 ## 2. Connect Etleap to Redshift and the data sources
@@ -148,3 +167,86 @@ SELECT
 - Click 'Run query'.
 
 As you can see, users that have made a purchase have clicked about 36% more on average as those who haven't made a purchase.
+
+
+## 6. Create Etleap ETL pipelines from the sources to S3 and Glue Catalog
+
+In this section we'll configure pipelines that will ETL data from the sources into your S3/Glue Catalog data lake.
+
+## 6.1. Set up the S3 Data Lake connection 
+
+Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/new/S3_DATA_LAKE). Use the following values:
+
+- Leave the name as `Amazon S3 Data Lake`
+- Create an access ID and a secret key:
+  - Make a note of the `DataLakeIAMUser` output from your CloudFormation stack.
+  - Going to the [IAM users list](https://console.aws.amazon.com/iam/home?region=us-east-1#/users) and click this user.
+  - Go to the 'Security credentials' tab.
+  - Click 'Create access key'.
+  - Input these values into the Etleap page.
+- For the bucket, use the `S3DataLakeBucket` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
+- Leave the base directory as '/'.
+- For the Glue database, use the `GlueCatalogDBName` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
+- For the Glue catalog region, specify 'us-east-1'.
+- Click 'Create Connection'.
+
+## 6.2. Set up the S3-to-S3/Glue pipeline
+
+This is similar to the S3-to-Redshift pipeline, except this time the destination is S3/Glue.
+
+- Click the 'Create' button in the top nav-bar in Etleap.
+- Pick 'Website Events' as the source.
+- This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
+- Click 'Skip Wrangling'.
+- Select the script from the 'Website Events' pipeline and click 'Next'.
+- Specify the following destination values:
+  - Table name: `Website_Events`
+  - Pipeline name: `Website Events - Lake`
+- Click 'More destination options' and select 'Parquet' as the output format.
+- Click 'Start ETLing'.
+
+## 6.3. Connect Redshift to Glue Catalog
+
+Now for the fun part - we're going to use Redshift Spectrum to query data stored both in Redshift and S3 in the same query. First we need to hook up Redshift to Glue Catalog:
+
+- Go to the [Redshift query editor](https://console.aws.amazon.com/redshift/home?region=us-east-1#query:).
+- Replace the `DataLakeIAMUser` and `RedshiftSpectrumIAMRole` output from your CloudFormation stack in the query below and execute it.
+
+```
+CREATE external SCHEMA spectrumdb
+FROM data catalog DATABASE '<GlueCatalogDBName>'
+IAM_ROLE '<RedshiftSpectrumIAMRole>'
+CREATE external DATABASE if not exists;
+```
+
+- Now we're ready to execute the query. Let's use the same query as before, but now using the data in S3 instead. The only difference in this query is the 'spectrumdb.' prefix in the from-clause in the clicks_per_user common table expression.
+
+```
+WITH users_with_purchases AS (
+  SELECT DISTINCT p.user_id
+    FROM purchases p
+), clicks_per_user AS (
+  SELECT userid, COUNT(*) AS clicks
+    FROM spectrumdb.Website_Events
+   WHERE event_type = 'Click'
+   GROUP BY userid)
+SELECT
+  SUM(CASE WHEN uwp.user_id IS NOT NULL THEN cpu.clicks ELSE 0 END) /
+  SUM(CASE WHEN uwp.user_id IS NOT NULL THEN 1 ELSE 0 END) AS with_purchase,
+  SUM(CASE WHEN uwp.user_id IS NULL THEN cpu.clicks ELSE 0 END) /
+  SUM(CASE WHEN uwp.user_id IS NULL THEN 1 ELSE 0 END) AS without_purchase
+  FROM clicks_per_user cpu
+  LEFT JOIN users_with_purchases uwp
+    ON cpu.userid = uwp.user_id
+```
+
+
+## 7. Delete the AWS resources
+
+- Go to [AWS CloudFormation console](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/).
+- Make sure the AWS region selected is N. Virginia (us-east-1).
+- Select the CloudFormation Stack you created in this workshop.
+- Click Delete.
+- Click “Delete Stack”.
+
+This will take few min to delete all the resources.
