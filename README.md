@@ -141,7 +141,7 @@ For this setup you'll need the values from your CloudFormation stack. These are 
 - Go to the [Redshift query editor](https://console.aws.amazon.com/redshift/home?region=us-east-1#query:).
 - Connect to your Redshift cluster in the 'Credentials' input:
   - Cluster: Pick the cluster that begins with 'etleap-redshift-workshop'.
-  - Database: `workshop`
+  - Database: `warehouse`
   - Database user: `root`
   - Database password: Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack.
 - Enter the following query:
@@ -188,7 +188,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
 - Leave the base directory as '/'.
 - For the Glue database, use the `GlueCatalogDBName` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
 - For the Glue catalog region, specify 'us-east-1'.
-- Click 'Create Connection'.
+- Click 'Create Connection'. Click "Ignore" for the warning about not having data in the input path.
 
 ## 6.2. Set up the S3-to-S3/Glue pipeline
 
@@ -199,6 +199,7 @@ This is similar to the S3-to-Redshift pipeline, except this time the destination
 - This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
 - Click 'Skip Wrangling'.
 - Select the script from the 'Website Events' pipeline and click 'Next'.
+- Select `Amazon S3 Data Lake` as the destination.
 - Specify the following destination values:
   - Table name: `Website_Events`
   - Pipeline name: `Website Events - Lake`
