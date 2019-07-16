@@ -188,7 +188,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
 - Leave the base directory as '/'.
 - For the Glue database, use the `GlueCatalogDBName` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
 - For the Glue catalog region, specify 'us-east-1'.
-- Click 'Create Connection'. Click "Ignore" for the warning about not having data in the input path.
+- Click 'Create Connection'. Click 'Ignore and Continue' for the warning about not having data in the input path.
 
 ## 6.2. Set up the S3-to-S3/Glue pipeline
 
@@ -244,7 +244,7 @@ SELECT
 
 ## 7. Delete the AWS resources
 
-- Go to [AWS CloudFormation console](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/).
+- Go to [AWS CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/).
 - Make sure the AWS region selected is N. Virginia (us-east-1).
 - Select the CloudFormation Stack you created in this workshop.
 - Click Delete.
