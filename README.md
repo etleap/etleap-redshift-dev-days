@@ -25,7 +25,7 @@ In this section we'll set up a new VPC with the following resources:
 Log into your AWS account and [go to the page to create the stack for this workshop](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Fs3.amazonaws.com%2Fetleap-redshift-workshop%2Fcloudformation-templates%2Fcf-template.yaml&stackName=EtleapRedshiftDevDayStack). 
 
 - Make sure the AWS region selected is N. Virginia (us-east-1).
-- Specify a root password for your Redshift cluster. This must consist of at least 8 alphanumeric characters only, and must have contain a lower-case letter, an upper-case letter, and a number.
+- Specify a root password for your Redshift cluster. This must consist of at least 8 alphanumeric characters only, and must contain a lower-case letter, an upper-case letter, and a number.
 - The other fields have sensible defaults, but feel free to modify as you see fit.
 
 After entering the all the parameter values: 
@@ -44,27 +44,7 @@ The first thing you'll need to do is log into Etleap using the credentials that 
 In the rest of this section we'll connect Etleap to the data sources and Redshift destination, so that we can create pipelines in the next section.
 
 
-### 2.1. Set up the Redshift connection
-
-For this setup you'll need the values from your CloudFormation stack. These are available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). 
-
-Set up the Redshift connection [here](https://app.etleap.com/#/connections/new/REDSHIFT). 
-- Leave the name as `Amazon Redshift`
-- Connection Method: Direct
-- Connection Information:
-  - Address: Use the 'Value' of 'RedshiftClusterHostnameOutput' from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
-  - Port: `5439`
-- Authentication:
-  - Username: `root`
-  - Password: Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack.
-- Database properties:
-  - Database: `workshop`
-  - Schema: `public`
-- Additional properties: Leave as their defaults.
-
-Click 'Create Connection'.
-
-### 2.2. Set up the S3 Input connection
+### 2.1. Set up the S3 Input connection
 
 Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
 
@@ -77,7 +57,7 @@ Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S
 
 Click 'Create Connection'.
 
-### 2.3. Set up the MySQL connection
+### 2.2. Set up the MySQL connection
 
 Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQL). Use the following values:
 
@@ -91,6 +71,26 @@ Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQ
 - Additional properties: Leave as their defaults.
 
 Click 'Create Connection'
+
+### 2.3. Set up the Redshift connection
+
+For this setup you'll need the values from your CloudFormation stack. These are available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). 
+
+Set up the Redshift connection [here](https://app.etleap.com/#/connections/new/REDSHIFT). 
+- Leave the name as `Amazon Redshift`
+- Connection Method: Direct
+- Connection Information:
+  - Address: Use the 'Value' of 'RedshiftClusterHostnameOutput' from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
+  - Port: `5439`
+- Authentication:
+  - Username: `root`
+  - Password: Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack.
+- Database properties:
+  - Database: `warehouse`
+  - Schema: `public`
+- Additional properties: Leave as their defaults.
+
+Click 'Create Connection'.
 
 ## 3. Create Etleap ETL pipelines from the sources to Redshift
 
