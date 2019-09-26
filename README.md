@@ -227,10 +227,10 @@ WITH users_with_purchases AS (
   SELECT DISTINCT p.user_id
     FROM purchases p
 ), clicks_per_user AS (
-  SELECT userid, COUNT(*) AS clicks
+  SELECT split1_userid, COUNT(*) AS clicks
     FROM spectrumdb.Website_Events
    WHERE event_type = 'Click'
-   GROUP BY userid)
+   GROUP BY split1_userid)
 SELECT
   SUM(CASE WHEN uwp.user_id IS NOT NULL THEN cpu.clicks ELSE 0 END) /
   SUM(CASE WHEN uwp.user_id IS NOT NULL THEN 1 ELSE 0 END) AS with_purchase,
@@ -238,7 +238,7 @@ SELECT
   SUM(CASE WHEN uwp.user_id IS NULL THEN 1 ELSE 0 END) AS without_purchase
   FROM clicks_per_user cpu
   LEFT JOIN users_with_purchases uwp
-    ON cpu.userid = uwp.user_id
+    ON cpu.split1_userid = uwp.user_id
 ```
 
 
