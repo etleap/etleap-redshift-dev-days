@@ -63,7 +63,7 @@ Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQ
 
 - Name: `Webstore`
 - Connection Method: Direct
-- Address: `dbtest.etleap.com`
+- Address: `test.dev.etleap.com`
 - Port: `3306`
 - Username: `etl`
 - Password: `Gpte7q3IOtzP`
