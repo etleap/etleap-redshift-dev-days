@@ -102,8 +102,10 @@ In this section we'll configure pipelines that will ETL data from the sources in
 - Pick 'Website Events' as the source.
 - This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
 - Click 'Wrangle Data'.
-- Wrangle the data. At a minimum, make sure the following rules are specified:
-  - Parse the JSON object: the input data should be correctly inferred as JSON and parsed out as a JSON object
+- Wrangle the data. 
+  - The JSON object should already be parsed by the wrangler, and each key is a column.
+  - The `timestamp` column needs to be loaded as a `datetime` object in the warehouse. Click on the column header. On the right hand side, the Wrangler will suggest "Interpret `timestamp` as date and time...". Select the option, then click "Add".
+  - Select the `ip` column header, and the Wrangler will suggest the "Look up geolocation..." transform. Select it, and click "Add".
 - Click 'Next'.
 - Pick 'Amazon Redshift' as the destination.
 - Specify the following destination values:
@@ -116,7 +118,7 @@ In this section we'll configure pipelines that will ETL data from the sources in
 
 - Click the 'Create' button in the top nav-bar in Etleap.
 - Pick 'Webstore' as the source.
-- Select all the tables
+- Select all the tables.
 - Click 'Next'.
 - Leave the settings as they are
 - Pick 'Amazon Redshift' as the destination.
@@ -124,7 +126,7 @@ In this section we'll configure pipelines that will ETL data from the sources in
 - Click 'Start ETLing'.
 
 
-### 4. Track ETL progress
+## 4. Track ETL progress
 
 Etleap is now ETL'ing the data from the sources to Redshift. This will take 5-10 minutes. You can monitor progress [here](https://app.etleap.com/#/activities). Once you see events saying 'Website Events loaded successfully' and 'purchases loaded successfully' you can proceed to the next section.
 
@@ -135,9 +137,9 @@ Now that we have our data in Redshift we'll run a query that uses both datasets:
 
 For this setup you'll need the values from your CloudFormation stack. These are available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1).
 
-- Go to the [Redshift query editor](https://console.aws.amazon.com/redshift/home?region=us-east-1#query:).
+- Go to the [Redshift query editor](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#query-editor:).
 - Connect to your Redshift cluster in the 'Credentials' input:
-  - Cluster: Pick the cluster that begins with 'etleap-redshift-workshop'.
+  - Cluster: Pick the cluster that begins with 'etleapredshiftdevdaystack'.
   - Database: `warehouse`
   - Database user: `root`
   - Database password: Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack.
@@ -146,24 +148,24 @@ For this setup you'll need the values from your CloudFormation stack. These are 
 ```
 WITH spend_per_user AS (
   SELECT u.external_id, SUM(i.price) AS spend
-  FROM webinar.purchase p 
-    INNER JOIN webinar.line_item li ON li.purchase_id = p.id
-    INNER JOIN webinar.item i ON i.item_id = li.item_id
-    INNER JOIN webinar.user u ON p.User_id = u.Id
+  FROM public.purchase p
+    INNER JOIN public.line_item li ON li.purchase_id = p.id
+    INNER JOIN public.item i ON i.item_id = li.item_id
+    INNER JOIN public.user u ON p.user_id = u.id
   GROUP BY u.external_id
 )
 SELECT s.external_id, SUM(s.spend)/COUNT(e.external_id) AS spend_by_login
   FROM spend_per_user s
-  INNER JOIN webinar.user u ON u.external_id = s.external_id
-  INNER JOIN webinar.login_events e ON e.external_id = u.external_id
+  INNER JOIN public.user u ON u.external_id = s.external_id
+  INNER JOIN public.website_events e ON e.external_id = u.external_id
 GROUP BY s.external_id
 ORDER BY spend_by_login desc
 LIMIT 10;
-
 ```
-- Click 'Run query'.
+- Click 'Run'.
 
-As you can see, users that have made a purchase have clicked about 36% more on average as those who haven't made a purchase.
+The above query takes a while to return the expected results.
+Let's see if we can improve on this with a Materialized View.
 
 ## 6. Create an Etleap Model
 
@@ -176,7 +178,7 @@ Now that all the data is in Redshift, let's create a model to speed up the runti
 
 ```
 SELECT u.id AS user_id, COUNT(e.external_id) AS logins
-FROM webinar.user u, webinar.login_events e
+FROM public.user u, public.Website_Events e
 WHERE u.external_id = e.external_id
 GROUP BY u.id;
 ```
@@ -185,22 +187,24 @@ GROUP BY u.id;
  - Name the table as `logins_by_user` and click 'Next'.
  - Finally, click 'Create Model' and you created a new materialized view in Etleap!
 
+ The model model will take a few minutes to create.
+ Once it is created, you can go on to next step.
 
-## 7. Run querries against this model
+## 7. Run queries against this model
 
 Similar to section 5, once the model update is complete, run the following query:
 
 ```
 WITH spend_per_user AS (
   SELECT p.user_id, SUM(i.price) AS spend
-  FROM webinar.purchase p 
-    INNER JOIN webinar.line_item li ON li.purchase_id = p.id
-    INNER JOIN webinar.item i ON i.item_id = li.item_id
+  FROM public.purchase p 
+    INNER JOIN public.line_item li ON li.purchase_id = p.id
+    INNER JOIN public.item i ON i.item_id = li.item_id
   GROUP BY p.user_id
 )
 SELECT s.user_id, SUM(s.spend)/SUM(l.logins) AS spend_by_login 
 FROM spend_per_user s
-  INNER JOIN webinar.logins_by_user_ctas l ON l.id = s.user_id
+  INNER JOIN public.logins_by_user l ON l.user_id = s.user_id
 GROUP BY s.user_id
 ORDER BY spend_by_login desc
 LIMIT 10;
@@ -214,13 +218,14 @@ This is the power of Materialized Views.
 
 In this section we'll configure pipelines that will ETL data from the sources into your S3/Glue Catalog data lake.
 
-## 8.1. Set up the S3 Data Lake connection 
+### 8.1. Set up the S3 Data Lake connection 
 
 Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/new/S3_DATA_LAKE). Use the following values:
 
 - Leave the name as `Amazon S3 Data Lake`
 - Create an access ID and a secret key:
-  - Make a note of the `DataLakeIAMUser` output from your CloudFormation stack.
+  - Make a note of the `DataLakeIAMUser` and `RedshiftSpectrumIAMRole	` output from your CloudFormation stack.
+  - Use the following IAM role: `arn:aws:iam::525618399791:role/devdays_20200528` 
   - Going to the [IAM users list](https://console.aws.amazon.com/iam/home?region=us-east-1#/users) and click this user.
   - Go to the 'Security credentials' tab.
   - Click 'Create access key'.
@@ -231,7 +236,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
 - For the Glue catalog region, specify 'us-east-1'.
 - Click 'Create Connection'. Click 'Ignore and Continue' for the warning about not having data in the input path.
 
-## 8.2. Set up the S3-to-S3/Glue pipeline
+### 8.2. Set up the S3-to-S3/Glue pipeline
 
 This is similar to the S3-to-Redshift pipeline, except this time the destination is S3/Glue.
 
@@ -247,7 +252,7 @@ This is similar to the S3-to-Redshift pipeline, except this time the destination
 - Click 'More destination options' and select 'Parquet' as the output format.
 - Click 'Start ETLing'.
 
-## 8.3. Connect Redshift to Glue Catalog
+### 8.3. Connect Redshift to Glue Catalog
 
 Now for the fun part - we're going to use Redshift Spectrum to query data stored both in Redshift and S3 in the same query. First we need to hook up Redshift to Glue Catalog:
 
@@ -264,22 +269,21 @@ CREATE external DATABASE if not exists;
 - Now we're ready to execute the query. Let's use the same query as before, but now using the data in S3 instead. The only difference in this query is the 'spectrumdb.' prefix in the from-clause in the clicks_per_user common table expression.
 
 ```
-WITH users_with_purchases AS (
-  SELECT DISTINCT p.user_id
-    FROM purchases p
-), clicks_per_user AS (
-  SELECT split1_userid, COUNT(*) AS clicks
-    FROM spectrumdb.Website_Events
-   WHERE event_type = 'Click'
-   GROUP BY split1_userid)
-SELECT
-  SUM(CASE WHEN uwp.user_id IS NOT NULL THEN cpu.clicks ELSE 0 END) /
-  SUM(CASE WHEN uwp.user_id IS NOT NULL THEN 1 ELSE 0 END) AS with_purchase,
-  SUM(CASE WHEN uwp.user_id IS NULL THEN cpu.clicks ELSE 0 END) /
-  SUM(CASE WHEN uwp.user_id IS NULL THEN 1 ELSE 0 END) AS without_purchase
-  FROM clicks_per_user cpu
-  LEFT JOIN users_with_purchases uwp
-    ON cpu.split1_userid = uwp.user_id
+WITH spend_per_user AS (
+  SELECT u.external_id, SUM(i.price) AS spend
+  FROM purchase p 
+    INNER JOIN line_item li ON li.purchase_id = p.id
+    INNER JOIN item i ON i.item_id = li.item_id
+    INNER JOIN user u ON p.User_id = u.Id
+  GROUP BY u.external_id
+)
+SELECT s.external_id, SUM(s.spend)/COUNT(e.external_id) AS spend_by_login
+  FROM spend_per_user s
+  INNER JOIN user u ON u.external_id = s.external_id
+  INNER JOIN spectrumdb.Website_Events e ON e.external_id = u.external_id
+GROUP BY s.external_id
+ORDER BY spend_by_login desc
+LIMIT 10;
 ```
 
 
@@ -291,4 +295,4 @@ SELECT
 - Click Delete.
 - Click “Delete Stack”.
 
-This will take few min to delete all the resources.
+This will take few minutes to delete all the resources.
