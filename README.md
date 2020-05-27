@@ -66,8 +66,8 @@ Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQ
 - Address: `test.dev.etleap.com`
 - Port: `3306`
 - Username: `etl`
-- Password: `Gpte7q3IOtzP`
-- Database: `webstore`
+- Password: `@1O3$zH$BYpug5LGi^5b`
+- Database: `mv_webstore`
 - Additional properties: Leave as their defaults.
 
 Click 'Create Connection'
@@ -102,10 +102,8 @@ In this section we'll configure pipelines that will ETL data from the sources in
 - Pick 'Website Events' as the source.
 - This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
 - Click 'Wrangle Data'.
-- Wrangle the data. At a minimum, specify the following rules:
-  - Split out the event type from the JSON object: highlight the whitespace between the event data and the JSON object in the first row, and pick the suggestion on the right that says `Split data once on ' '`.
-  - Rename the event type column: double-click the header where it says 'split', enter 'event_type', and click enter.
-  - Parse the JSON object: single-click the 'split1' column and pick the first suggestion on the right.
+- Wrangle the data. At a minimum, make sure the following rules are specified:
+  - Parse the JSON object: the input data should be correctly inferred as JSON and parsed out as a JSON object
 - Click 'Next'.
 - Pick 'Amazon Redshift' as the destination.
 - Specify the following destination values:
@@ -118,10 +116,9 @@ In this section we'll configure pipelines that will ETL data from the sources in
 
 - Click the 'Create' button in the top nav-bar in Etleap.
 - Pick 'Webstore' as the source.
-- Pick 'purchases' as the table to import.
-- Click 'Skip Wrangling'.
-- Click 'Generate automatically'.
-- Leave the 'Primary key' as 'id' and 'Update timestamp' as 'update_date', and click 'Next'.
+- Select all the tables
+- Click 'Next'.
+- Leave the settings as they are
 - Pick 'Amazon Redshift' as the destination.
 - Leave all the options as their defaults in this step and click 'Next'.
 - Click 'Start ETLing'.
@@ -147,33 +144,77 @@ For this setup you'll need the values from your CloudFormation stack. These are 
 - Enter the following query:
 
 ```
-WITH users_with_purchases AS (
-  SELECT DISTINCT p.user_id
-    FROM purchases p
-), clicks_per_user AS (
-  SELECT split1_userid, COUNT(*) AS clicks
-    FROM Website_Events
-   WHERE event_type = 'Click'
-   GROUP BY split1_userid)
-SELECT
-  SUM(CASE WHEN uwp.user_id IS NOT NULL THEN cpu.clicks ELSE 0 END) /
-  SUM(CASE WHEN uwp.user_id IS NOT NULL THEN 1 ELSE 0 END) AS with_purchase,
-  SUM(CASE WHEN uwp.user_id IS NULL THEN cpu.clicks ELSE 0 END) /
-  SUM(CASE WHEN uwp.user_id IS NULL THEN 1 ELSE 0 END) AS without_purchase
-  FROM clicks_per_user cpu
-  LEFT JOIN users_with_purchases uwp
-    ON cpu.split1_userid = uwp.user_id
+WITH spend_per_user AS (
+  SELECT u.external_id, SUM(i.price) AS spend
+  FROM webinar.purchase p 
+    INNER JOIN webinar.line_item li ON li.purchase_id = p.id
+    INNER JOIN webinar.item i ON i.item_id = li.item_id
+    INNER JOIN webinar.user u ON p.User_id = u.Id
+  GROUP BY u.external_id
+)
+SELECT s.external_id, SUM(s.spend)/COUNT(e.external_id) AS spend_by_login
+  FROM spend_per_user s
+  INNER JOIN webinar.user u ON u.external_id = s.external_id
+  INNER JOIN webinar.login_events e ON e.external_id = u.external_id
+GROUP BY s.external_id
+ORDER BY spend_by_login desc
+LIMIT 10;
+
 ```
 - Click 'Run query'.
 
 As you can see, users that have made a purchase have clicked about 36% more on average as those who haven't made a purchase.
 
+## 6. Create an Etleap Model
 
-## 6. Create Etleap ETL pipelines from the sources to S3 and Glue Catalog
+Now that all the data is in Redshift, let's create a model to speed up the runtime of the previous query.
+
+ - Click the 'Create' button in the top nav-bar in Etleap.
+ - Pick 'Amazon Redshift' as the source.
+ - Select 'Model'
+ - In the query editor enter the following query:
+
+```
+SELECT u.id AS user_id, COUNT(e.external_id) AS logins
+FROM webinar.user u, webinar.login_events e
+WHERE u.external_id = e.external_id
+GROUP BY u.id;
+```
+
+ - Select 'Materialized View' and click 'Next'
+ - Name the table as `logins_by_user` and click 'Next'.
+ - Finally, click 'Create Model' and you created a new materialized view in Etleap!
+
+
+## 7. Run querries against this model
+
+Similar to section 5, once the model update is complete, run the following query:
+
+```
+WITH spend_per_user AS (
+  SELECT p.user_id, SUM(i.price) AS spend
+  FROM webinar.purchase p 
+    INNER JOIN webinar.line_item li ON li.purchase_id = p.id
+    INNER JOIN webinar.item i ON i.item_id = li.item_id
+  GROUP BY p.user_id
+)
+SELECT s.user_id, SUM(s.spend)/SUM(l.logins) AS spend_by_login 
+FROM spend_per_user s
+  INNER JOIN webinar.logins_by_user_ctas l ON l.id = s.user_id
+GROUP BY s.user_id
+ORDER BY spend_by_login desc
+LIMIT 10;
+```
+
+As you can see, this time the query ran considerably faster the before.
+This is the power of Materialized Views.
+
+
+## 8. Create Etleap ETL pipelines from the sources to S3 and Glue Catalog
 
 In this section we'll configure pipelines that will ETL data from the sources into your S3/Glue Catalog data lake.
 
-## 6.1. Set up the S3 Data Lake connection 
+## 8.1. Set up the S3 Data Lake connection 
 
 Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/new/S3_DATA_LAKE). Use the following values:
 
@@ -190,7 +231,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
 - For the Glue catalog region, specify 'us-east-1'.
 - Click 'Create Connection'. Click 'Ignore and Continue' for the warning about not having data in the input path.
 
-## 6.2. Set up the S3-to-S3/Glue pipeline
+## 8.2. Set up the S3-to-S3/Glue pipeline
 
 This is similar to the S3-to-Redshift pipeline, except this time the destination is S3/Glue.
 
@@ -206,7 +247,7 @@ This is similar to the S3-to-Redshift pipeline, except this time the destination
 - Click 'More destination options' and select 'Parquet' as the output format.
 - Click 'Start ETLing'.
 
-## 6.3. Connect Redshift to Glue Catalog
+## 8.3. Connect Redshift to Glue Catalog
 
 Now for the fun part - we're going to use Redshift Spectrum to query data stored both in Redshift and S3 in the same query. First we need to hook up Redshift to Glue Catalog:
 
@@ -242,7 +283,7 @@ SELECT
 ```
 
 
-## 7. Delete the AWS resources
+## 9. Delete the AWS resources
 
 - Go to [AWS CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/).
 - Make sure the AWS region selected is N. Virginia (us-east-1).
