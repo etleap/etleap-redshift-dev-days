@@ -49,8 +49,7 @@ In the rest of this section we'll connect Etleap to the data sources and Redshif
 Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
 
 - Name: `Website Events`
-- Access ID: (see email with subject 'Etleap and AWS Redshift Dev Days Instructions')
-- Secret Key: (see email with subject 'Etleap and AWS Redshift Dev Days Instructions')
+- IAM Role: `arn:aws:iam::525618399791:role/devdays_20200528`
 - Data Bucket: `etleap-redshift-devdays`
 - Base Directory: `events`
 - Additional Properties: Leave as their defaults.
@@ -226,10 +225,6 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
 - Create an access ID and a secret key:
   - Make a note of the `DataLakeIAMUser` and `RedshiftSpectrumIAMRole	` output from your CloudFormation stack.
   - Use the following IAM role: `arn:aws:iam::525618399791:role/devdays_20200528` 
-  - Going to the [IAM users list](https://console.aws.amazon.com/iam/home?region=us-east-1#/users) and click this user.
-  - Go to the 'Security credentials' tab.
-  - Click 'Create access key'.
-  - Input these values into the Etleap page.
 - For the bucket, use the `S3DataLakeBucket` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
 - Leave the base directory as '/'.
 - For the Glue database, use the `GlueCatalogDBName` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
