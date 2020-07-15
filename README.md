@@ -285,7 +285,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
   - Name the policy `etleap_data_lake` and click "Create"
   - Find the policy in the list, check it, and click "Next: Tags"
   - Under the "Tags" page, click "Next: Review"
-  - Name the role `etleap_data_late` and click "Create"
+  - Name the role `etleap_data_lake` and click "Create"
   - Once the role is created, select it in the list, and copy the "Role ARN". This is the value you need for the DataLake Connection.
 - For the bucket, use the `S3DataLakeBucket` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
 - Leave the base directory as '/'.
@@ -328,15 +328,15 @@ CREATE external DATABASE if not exists;
 ```
 WITH spend_per_user AS (
   SELECT u.external_id, SUM(i.price) AS spend
-  FROM purchase p 
-    INNER JOIN line_item li ON li.purchase_id = p.id
-    INNER JOIN item i ON i.item_id = li.item_id
-    INNER JOIN user u ON p.User_id = u.Id
+  FROM public.purchase p 
+    INNER JOIN public.line_item li ON li.purchase_id = p.id
+    INNER JOIN public.item i ON i.item_id = li.item_id
+    INNER JOIN public.user u ON p.User_id = u.Id
   GROUP BY u.external_id
 )
 SELECT s.external_id, SUM(s.spend)/COUNT(e.external_id) AS spend_by_login
   FROM spend_per_user s
-  INNER JOIN user u ON u.external_id = s.external_id
+  INNER JOIN public.user u ON u.external_id = s.external_id
   INNER JOIN spectrumdb.Website_Events e ON e.external_id = u.external_id
 GROUP BY s.external_id
 ORDER BY spend_by_login desc
