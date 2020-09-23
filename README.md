@@ -227,7 +227,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
   - Click "Create Role"
   - Select "Another AWS account"
   - Under Account ID enter: `223848809711`
-  - Select the "Require External ID" checkbox, and enter the `devdayssevenfifteen`.
+  - Select the "Require External ID" checkbox, and enter the `devdaysninetwentythree`.
   - Click "Next" and on the next page click create policy, select the JSON tab, and enter the following policy
 
 ```
