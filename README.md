@@ -49,7 +49,7 @@ In the rest of this section we'll connect Etleap to the data sources and Redshif
 Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
 
 - Name: `Website Events`
-- IAM Role: `arn:aws:iam::525618399791:role/devdays_20200921`
+- IAM Role: `arn:aws:iam::525618399791:role/devdays_20201118`
 - Data Bucket: `etleap-redshift-devdays`
 - Base Directory: `events`
 - Additional Properties: Leave as their defaults.
