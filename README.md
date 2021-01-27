@@ -49,7 +49,7 @@ In the rest of this section we'll connect Etleap to the data sources and Redshif
 Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
 
 - Name: `Website Events`
-- IAM Role: `arn:aws:iam::525618399791:role/devdays_20201118`
+- IAM Role: `arn:aws:iam::525618399791:role/dev_days_20210127`
 - Data Bucket: `etleap-redshift-devdays`
 - Base Directory: `events`
 - Additional Properties: Leave as their defaults.
@@ -227,7 +227,7 @@ Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/n
   - Click "Create Role"
   - Select "Another AWS account"
   - Under Account ID enter: `223848809711`
-  - Select the "Require External ID" checkbox, and enter the `ddeleveneighteen`.
+  - Select the "Require External ID" checkbox, and enter the `ddonetwentyseven`.
   - Click "Next" and on the next page click create policy, select the JSON tab, and enter the following policy
 
 ```
