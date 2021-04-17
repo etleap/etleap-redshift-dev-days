@@ -35,7 +35,7 @@ After entering the all the parameter values:
 - Click 'Create stack' and wait for the creation to complete.
 
 
-## 2. Connect Etleap to Redshift and the data sources
+## 2. Connect Etleap to Redshift and the data sources, and set up pipelines
 
 We'll ETL data from two different data sources into your Redshift data warehouse. One source, an S3 bucket, contains JSON-formatted click event data. The other, a MySQL database, contains information about users. 
 
@@ -57,43 +57,28 @@ We will set up the Redshift Connection using the Redshift Partner Integration:
   - Confirm your Redshift password. Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack. Click "Validate and Setup Connection." 
   - Add your email address. This will send you a confirmation email. Click the link in the email to continue.
 - Fill in your details, and click "Create Account!"
-- Your account and connection are now ready to use.
+- Your account and connection are now ready to use. We'll go ahead , and set up more connection.
 
-### 2.2. Set up the SFTP Input connection
+## 2.2 Ingesting data from SFTP sources
 
-Set up the SFTP Input connection [here](https://app.etleap.com/#/connections/new/SFTP). Use the following values:
+In this section, we'll configure a SFTP connection, and create pipelines from it.
+
+### 2.2.1 Set up the SFTP Input connection
+
+Use the search box to filter for SFTP, and click on the SFTP icon to create a new connection.
+Use the following values for the inputs
 
 - Name: `Website Events`
 - Hostname: `3.238.249.185`
 - Username: `sftpuser`
 - Password: `devdaystest`
 
-Click 'Save'.
+Click 'Save'. 
+This will take you to the list of files available in the SFTP connection.
 
-### 2.3. Set up the MySQL connection
+### 2.2.2 Create the SFTP Pipeline
 
-Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQL). Use the following values:
-
-- Name: `Webstore`
-- Connection Method: Direct
-- Address: `test.dev.etleap.com`
-- Port: `3306`
-- Username: `etl`
-- Password: `@1O3$zH$BYpug5LGi^5b`
-- Database: `mv_webstore`
-- Additional properties: Leave as their defaults.
-
-Click 'Create Connection'
-
-## 3. Create Etleap ETL pipelines from the sources to Redshift
-
-In this section we'll configure pipelines that will ETL data from the sources into the Redshift database.
-
-### 3.1. Set up the SFTP-to-Redshift pipeline
-
-- Click the 'Create' button in the top nav-bar in Etleap.
-- Pick 'Website Events' as the source.
-- This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
+- Click the check-box next to the `events` folder, to select the whole folder.
 - Click 'Wrangle Data'.
 - Wrangle the data. 
   - The JSON object should already be parsed by the wrangler, and each key is a column.
@@ -107,10 +92,29 @@ In this section we'll configure pipelines that will ETL data from the sources in
 - Click 'Next'.
 - Click 'Start ETLing'.
 
-### 3.2. Set up the MySQL-to-Redshift pipeline
+The pipeline is now set up.
 
-- Click the 'Create' button in the top nav-bar in Etleap.
-- Pick 'Webstore' as the source.
+### 2.3 Set up the MySQL connection and pipelines
+
+### 2.3.1 Set up the MySQL connection
+
+Use the search box to filter for MySQL, and click on the MySQL icon to create a new connection. 
+Use the following values as the input
+
+- Name: `Webstore`
+- Connection Method: Direct
+- Address: `test.dev.etleap.com`
+- Port: `3306`
+- Username: `etl`
+- Password: `@1O3$zH$BYpug5LGi^5b`
+- Database: `mv_webstore`
+- Additional properties: Leave as their defaults.
+
+Click 'Create Connection'
+
+### 2.3.2. Set up the MySQL-to-Redshift pipeline
+
+- You'll see a list with all the tables available in Redshift.
 - Select all the tables.
 - Click 'Next'.
 - Leave the settings as they are
