@@ -54,10 +54,10 @@ We will set up the Redshift Connection using the Redshift Partner Integration:
 - From the list of partners, select "Etleap." It should be the first option.
 - Leave all the settings as they are and click "Add partner."
 - This will take you to the Etleap console.
-  - Confirm your Redshift password, then click "Next." Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack
+  - Confirm your Redshift password. Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack. Click "Validate and Setup Connection." 
   - Add your email address. This will send you a confirmation email. Click the link in the email to continue.
 - Fill in your details, and click "Create Account!"
-- Your account and connection are now ready.
+- Your account and connection are now ready to use.
 
 ### 2.2. Set up the SFTP Input connection
 
