@@ -44,17 +44,16 @@ The first thing you'll need to do is log into Etleap using the credentials that 
 In the rest of this section we'll connect Etleap to the data sources and Redshift destination, so that we can create pipelines in the next section.
 
 
-### 2.1. Set up the S3 Input connection
+### 2.1. Set up the SFTP Input connection
 
-Set up the S3 Input connection [here](https://app.etleap.com/#/connections/new/S3_INPUT). Use the following values:
+Set up the SFTP Input connection [here](https://app.etleap.com/#/connections/new/SFTP). Use the following values:
 
 - Name: `Website Events`
-- IAM Role: `arn:aws:iam::525618399791:role/dev_days_20210127`
-- Data Bucket: `etleap-redshift-devdays`
-- Base Directory: `events`
-- Additional Properties: Leave as their defaults.
+- Hostname: `3.238.249.185`
+- Username: `sftpuser`
+- Password: `devdaystest`
 
-Click 'Create Connection'.
+Click 'Save'.
 
 ### 2.2. Set up the MySQL connection
 
@@ -95,7 +94,7 @@ Click 'Create Connection'.
 
 In this section we'll configure pipelines that will ETL data from the sources into the Redshift database.
 
-### 3.1. Set up the S3-to-Redshift pipeline
+### 3.1. Set up the SFTP-to-Redshift pipeline
 
 - Click the 'Create' button in the top nav-bar in Etleap.
 - Pick 'Website Events' as the source.
@@ -212,139 +211,7 @@ LIMIT 10;
 As you can see, this time the query ran considerably faster the before.
 This is the power of Materialized Views.
 
-
-## 8. Create Etleap ETL pipelines from the sources to S3 and Glue Catalog
-
-In this section we'll configure pipelines that will ETL data from the sources into your S3/Glue Catalog data lake.
-
-### 8.1. Set up the S3 Data Lake connection 
-
-Set up the S3 Data Lake connection [here](https://app.etleap.com/#/connections/new/S3_DATA_LAKE). Use the following values:
-
-- Leave the name as `Amazon S3 Data Lake`
-- Create an IAM Role
-  - Go to the IAM Role section of the AWS Console [here](https://console.aws.amazon.com/iam/home?region=us-east-1#/roles)
-  - Click "Create Role"
-  - Select "Another AWS account"
-  - Under Account ID enter: `223848809711`
-  - Select the "Require External ID" checkbox, and enter the `ddonetwentyseven`.
-  - Click "Next" and on the next page click create policy, select the JSON tab, and enter the following policy
-
-```
-{
-    "Version": "2012-10-17",
-    "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-            "s3:GetObject",
-            "s3:ListBucket"
-        ],
-        "Resource":[
-            "arn:aws:s3:::etleap-redshift-devdays-intermediate/output/*"
-        ]
-    },
-    {
-        "Effect": "Allow",
-        "Action": "s3:ListBucket",
-        "Resource": "arn:aws:s3:::etleap-redshift-devdays-intermediate",
-        "Condition": {"StringLike":{"s3:prefix":"output*"}}
-    },
-    {
-        "Effect": "Allow",
-        "Action": [
-            "s3:GetObject",
-            "s3:PutObject",
-            "s3:DeleteObject"
-        ],
-        "Resource":[
-            "arn:aws:s3:::etleap-redshift-workshop-lake-*"
-        ]
-    },
-    {
-	"Effect": "Allow",
-	"Action": "s3:ListBucket",
-	"Resource": "arn:aws:s3:::etleap-redshift-workshop-lake-*",
-	"Condition": {"StringLike":{"s3:prefix":"*"}}
-    }, 
-    {
-        "Effect": "Allow",
-        "Action": [
-            "glue:CreateTable",
-            "glue:UpdateTable",
-            "glue:DeleteTable",
-            "glue:BatchCreatePartition",
-            "glue:GetPartitions"
-        ],
-        "Resource": [
-            "*"
-        ]
-    }]
-}
-```
-  - Name the policy `etleap_data_lake` and click "Create"
-  - Find the policy in the list, check it, and click "Next: Tags"
-  - Under the "Tags" page, click "Next: Review"
-  - Name the role `etleap_data_lake` and click "Create"
-  - Once the role is created, select it in the list, and copy the "Role ARN". This is the value you need for the DataLake Connection.
-- For the bucket, use the `S3DataLakeBucket` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
-- Leave the base directory as '/'.
-- For the Glue database, use the `GlueCatalogDBName` output from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
-- For the Glue catalog region, specify 'us-east-1'.
-- Click 'Create Connection'. Click 'Ignore and Continue' for the warning about not having data in the input path.
-
-### 8.2. Set up the S3-to-S3/Glue pipeline
-
-This is similar to the S3-to-Redshift pipeline, except this time the destination is S3/Glue.
-
-- Click the 'Create' button in the top nav-bar in Etleap.
-- Pick 'Website Events' as the source.
-- This page lists the files and folders available in S3. Click the radio button in the top-left to select the top-level directory.
-- Click 'Skip Wrangling'.
-- Select the script from the 'Website Events' pipeline and click 'Next'.
-- Select `Amazon S3 Data Lake` as the destination.
-- Specify the following destination values:
-  - Table name: `Website_Events`
-  - Pipeline name: `Website Events - Lake`
-- Click 'More destination options' and select 'Parquet' as the output format.
-- Click 'Start ETLing'.
-
-### 8.3. Connect Redshift to Glue Catalog
-
-Now for the fun part - we're going to use Redshift Spectrum to query data stored both in Redshift and S3 in the same query. First we need to hook up Redshift to Glue Catalog:
-
-- Go to the [Redshift query editor](https://console.aws.amazon.com/redshift/home?region=us-east-1#query:).
-- Replace the `DataLakeIAMUser` and `RedshiftSpectrumIAMRole` output from your CloudFormation stack in the query below and execute it.
-
-```
-CREATE external SCHEMA spectrumdb
-FROM data catalog DATABASE '<GlueCatalogDBName>'
-IAM_ROLE '<RedshiftSpectrumIAMRole>'
-CREATE external DATABASE if not exists;
-```
-
-- Now we're ready to execute the query. Let's use the same query as before, but now using the data in S3 instead. The only difference in this query is the 'spectrumdb.' prefix in the from-clause in the clicks_per_user common table expression.
-
-```
-WITH spend_per_user AS (
-  SELECT u.external_id, SUM(i.price) AS spend
-  FROM public.purchase p 
-    INNER JOIN public.line_item li ON li.purchase_id = p.id
-    INNER JOIN public.item i ON i.item_id = li.item_id
-    INNER JOIN public.user u ON p.User_id = u.Id
-  GROUP BY u.external_id
-)
-SELECT s.external_id, SUM(s.spend)/COUNT(e.external_id) AS spend_by_login
-  FROM spend_per_user s
-  INNER JOIN public.user u ON u.external_id = s.external_id
-  INNER JOIN spectrumdb.Website_Events e ON e.external_id = u.external_id
-GROUP BY s.external_id
-ORDER BY spend_by_login desc
-LIMIT 10;
-```
-
-
-## 9. Delete the AWS resources
+## 8. Delete the AWS resources
 
 - Go to [AWS CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/).
 - Make sure the AWS region selected is N. Virginia (us-east-1).
