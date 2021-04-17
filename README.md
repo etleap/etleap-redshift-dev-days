@@ -43,8 +43,23 @@ The first thing you'll need to do is log into Etleap using the credentials that 
 
 In the rest of this section we'll connect Etleap to the data sources and Redshift destination, so that we can create pipelines in the next section.
 
+### 2.1. Set up the Redshift connection via the Partner Integration Console
 
-### 2.1. Set up the SFTP Input connection
+For this setup you'll need the values from your CloudFormation stack. These are available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). 
+
+We will set up the Redshift Connection using the Redshift Partner Integration:
+- Go to the Redshift Console [here](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters).
+- Select the cluster your just created. 
+- In the top right corner, click on the 'Add Partner Integration' button.
+- From the list of partners, select "Etleap." It should be the first option.
+- Leave all the settings as they are and click "Add partner."
+- This will take you to the Etleap console.
+  - Confirm your Redshift password, then click "Next." Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack
+  - Add your email address. This will send you a confirmation email. Click the link in the email to continue.
+- Fill in your details, and click "Create Account!"
+- Your account and connection are now ready.
+
+### 2.2. Set up the SFTP Input connection
 
 Set up the SFTP Input connection [here](https://app.etleap.com/#/connections/new/SFTP). Use the following values:
 
@@ -55,7 +70,7 @@ Set up the SFTP Input connection [here](https://app.etleap.com/#/connections/new
 
 Click 'Save'.
 
-### 2.2. Set up the MySQL connection
+### 2.3. Set up the MySQL connection
 
 Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQL). Use the following values:
 
@@ -69,26 +84,6 @@ Set up the MySQL connection [here](https://app.etleap.com/#/connections/new/MYSQ
 - Additional properties: Leave as their defaults.
 
 Click 'Create Connection'
-
-### 2.3. Set up the Redshift connection
-
-For this setup you'll need the values from your CloudFormation stack. These are available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). 
-
-Set up the Redshift connection [here](https://app.etleap.com/#/connections/new/REDSHIFT). 
-- Leave the name as `Amazon Redshift`
-- Connection Method: Direct
-- Connection Information:
-  - Address: Use the 'Value' of 'RedshiftClusterHostnameOutput' from your CloudFormation stack. Make sure you remove any whitespace at the end of the input.
-  - Port: `5439`
-- Authentication:
-  - Username: `root`
-  - Password: Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack.
-- Database properties:
-  - Database: `warehouse`
-  - Schema: `public`
-- Additional properties: Leave as their defaults.
-
-Click 'Create Connection'.
 
 ## 3. Create Etleap ETL pipelines from the sources to Redshift
 
