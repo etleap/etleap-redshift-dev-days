@@ -12,7 +12,7 @@ In this workshop you'll learn how to create a Redshift data warehouse that centr
 You must have an AWS account and an [AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/) user with sufficient permissions to interact with the AWS Management Console and creating various resources. Your IAM permissions must also include access to create IAM roles and policies created by the AWS CloudFormation template.
 
 
-## 1. Set up an Redshift Cluster
+## 1. Set up a Redshift Cluster
 
 In this section we'll set up a new Redshift cluster
 
@@ -38,19 +38,19 @@ In the rest of this section we'll connect Etleap to the data sources and Redshif
 
 ### 2.1. Set up the Redshift connection via the Partner Integration Console
 
-For this setup you'll need the values from your CloudFormation stack. These are available on the **Outputs** tab in the [Stack Info page](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). 
+For this setup you'll need the password you used when creating the Redshift Cluster.
 
 We will set up the Redshift Connection using the Redshift Partner Integration:
 - Go to the Redshift Console [here](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters).
 - Select the cluster your just created. 
-- In the top right corner, click on the 'Add Partner Integration' button.
+- In the top right corner, click on the "Add Partner Integration" button.
 - From the list of partners, select "Etleap". It should be the first option.
-- Leave all the settings as they are and click "Add partner."
+- Leave all the settings as they are and click "Add partner".
 - This will take you to the Etleap console.
-  - Confirm your Redshift password. Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack. Click "Validate and Setup Connection." 
+  - Confirm your Redshift password. Use the "Value" of "RedshiftClusterPasswordOutput" from your CloudFormation stack. Click "Validate and Setup Connection." 
   - Add your email address. This will send you a confirmation email. Click the link in the email to continue.
 - Fill in your details, and click "Create Account!"
-- Your account and connection are now ready to use. We'll go ahead , and set up more connection.
+- Your account and connection are now ready to use. We'll go ahead, and set up more connection.
 
 ## 2.2 Ingesting data from SFTP sources
 
@@ -109,7 +109,9 @@ Click 'Create Connection'
 
 ### 2.3.2. Set up the MySQL-to-Redshift pipeline
 
-- You'll see a list with all the tables available in Redshift.
+You'll see a list with all the tables available in the MySQL database.
+We'll create pipelines for all of them in a single workflow.
+
 - Select all the tables.
 - Click 'Next'.
 - Leave the settings as they are
@@ -133,8 +135,8 @@ For this setup you'll need the values from your CloudFormation stack. These are 
 - Connect to your Redshift cluster in the 'Credentials' input:
   - Cluster: Pick the cluster that begins with 'etleapredshiftdevdaystack'.
   - Database: `warehouse`
-  - Database user: `root`
-  - Database password: Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack.
+  - Database user: `awsuser`
+  - Database password: Use the password you used when Creating the Redshift Cluster
 - Enter the following query:
 
 ```
