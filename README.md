@@ -51,7 +51,7 @@ We will set up the Redshift Connection using the Redshift Partner Integration:
 - Go to the Redshift Console [here](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters).
 - Select the cluster your just created. 
 - In the top right corner, click on the 'Add Partner Integration' button.
-- From the list of partners, select "Etleap." It should be the first option.
+- From the list of partners, select "Etleap". It should be the first option.
 - Leave all the settings as they are and click "Add partner."
 - This will take you to the Etleap console.
   - Confirm your Redshift password. Use the 'Value' of 'RedshiftClusterPasswordOutput' from your CloudFormation stack. Click "Validate and Setup Connection." 
