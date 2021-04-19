@@ -12,32 +12,25 @@ In this workshop you'll learn how to create a Redshift data warehouse that centr
 You must have an AWS account and an [AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/) user with sufficient permissions to interact with the AWS Management Console and creating various resources. Your IAM permissions must also include access to create IAM roles and policies created by the AWS CloudFormation template.
 
 
-## 1. Set up an AWS VPC with Redshift, Glue, and S3
+## 1. Set up an Redshift Cluster
 
-In this section we'll set up a new VPC with the following resources:
+In this section we'll set up a new Redshift cluster
 
-- A Redshift cluster along with the security group rules necessary for accessing it from Etleap. 
-- An S3 bucket to host our data lake.
-- A Glue Catalog database to store data lake metadata.
-- An IAM role that will be assigned to the Redshift cluster and used to access the data lake.
-- An IAM user that will be used by Etleap to access the data lake.
-
-Log into your AWS account and [go to the page to create the stack for this workshop](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Fs3.amazonaws.com%2Fetleap-redshift-workshop%2Fcloudformation-templates%2Fcf-template.yaml&stackName=EtleapRedshiftDevDayStack). 
+Log into your AWS account and [go to the Redshift Console](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters). 
 
 - Make sure the AWS region selected is N. Virginia (us-east-1).
-- Specify a root password for your Redshift cluster. This must consist of at least 8 alphanumeric characters only, and must contain a lower-case letter, an upper-case letter, and a number.
-- The other fields have sensible defaults, but feel free to modify as you see fit.
+- Click "Create Cluster" in top right-hand corner.
+- For the node type select `dc2.large`.
+- For the number of nodes, select `1`.
+- Under "Database configurations", enter a password that you'll remember. We will need this to connect to the cluster later on.
+- Leave all other settings as they are.
 
-After entering the all the parameter values: 
-- Click 'Next'.
-- On the next screen, enter any required tags, an IAM role, or any advanced options, and then click 'Next'.
-- Review the details on the final screen, Check the box for 'I acknowledge that AWS CloudFormation might create IAM resources' and then choose 'Create' to start building the resources.
-- Click 'Create stack' and wait for the creation to complete.
-
+Click "Create cluster".
+It will take 5-10 minutes for the cluster to start up.
 
 ## 2. Connect Etleap to Redshift and the data sources, and set up pipelines
 
-We'll ETL data from two different data sources into your Redshift data warehouse. One source, an S3 bucket, contains JSON-formatted click event data. The other, a MySQL database, contains information about users. 
+We'll ETL data from two different data sources into your Redshift data warehouse. One source, an SFTP source, contains JSON-formatted click event data. The other, a MySQL database, contains information about users. 
 
 The first thing you'll need to do is log into Etleap using the credentials that were provided to you via email. The email has the subject line 'Your Etleap Account'.
 
@@ -69,16 +62,18 @@ Use the search box to filter for SFTP, and click on the SFTP icon to create a ne
 Use the following values for the inputs
 
 - Name: `Website Events`
-- Hostname: `3.238.249.185`
-- Username: `sftpuser`
-- Password: `devdaystest`
+- Hostname: `test.dev.etleap.com`
+- Port: `2222` 
+- Username: `devdays`
+- Password: `i5eU2nZx4d`
 
 Click 'Save'. 
+
 This will take you to the list of files available in the SFTP connection.
 
 ### 2.2.2 Create the SFTP Pipeline
 
-- Click the check-box next to the `events` folder, to select the whole folder.
+- Select the `events` folder, and click the checkbox in the top-left corner. This will select all the files in the `events` folder.
 - Click 'Wrangle Data'.
 - Wrangle the data. 
   - The JSON object should already be parsed by the wrangler, and each key is a column.
@@ -210,12 +205,13 @@ LIMIT 10;
 As you can see, this time the query ran considerably faster the before.
 This is the power of Materialized Views.
 
-## 8. Delete the AWS resources
+## 8. Delete the Redshift Cluster
 
-- Go to [AWS CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/).
+- Go to the [AWS Redshift Console](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters)
 - Make sure the AWS region selected is N. Virginia (us-east-1).
-- Select the CloudFormation Stack you created in this workshop.
-- Click Delete.
-- Click “Delete Stack”.
+- Select the cluster you created earlier 
+- Under "Actions" in the top right corner, select "Delete cluster."
+- Deselect the "Create final snapshop" option
+- Click "Delete Cluster" to the remove the cluster.
 
-This will take few minutes to delete all the resources.
+This will take few minutes to delete the cluster.
