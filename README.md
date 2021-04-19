@@ -28,73 +28,88 @@ Log into your AWS account and [go to the Redshift Console](https://console.aws.a
 Click "Create cluster".
 It will take 5-10 minutes for the cluster to start up.
 
-## 2. Connect Etleap to Redshift and the data sources, and set up pipelines
+Once the cluster is up, you will need to make it publicly accessible.
+This makes connecting to the cluster easier for the purposes of this workshop.
 
-We'll ETL data from two different data sources into your Redshift data warehouse. One source, an SFTP source, contains JSON-formatted click event data. The other, a MySQL database, contains information about users. 
+Select the cluster you just created, and click "Actions" in the top right corner.
+Under "Manage Cluster", select "Modify publicly accessible setting" and select "Enable" in the dialog box that shows up.
+Click "Save Changes".
+It will take a few minutes for the cluster to become "Available".
 
-The first thing you'll need to do is log into Etleap using the credentials that were provided to you via email. The email has the subject line 'Your Etleap Account'.
+Once the cluster is "Available", you are ready to proceed to the next step. 
 
-In the rest of this section we'll connect Etleap to the data sources and Redshift destination, so that we can create pipelines in the next section.
+## 2. Connect Etleap to Redshift
 
-### 2.1. Set up the Redshift connection via the Partner Integration Console
+We'll ETL data from two different data sources into your Redshift data warehouse. 
+One source, an MongoDB source, contains JSON-formatted click event data. 
+The other, a MySQL database, contains information about users. 
 
+First, we need to setup our Redshift Cluster as a connection in Etleap.
 For this setup you'll need the password you used when creating the Redshift Cluster.
 
 We will set up the Redshift Connection using the Redshift Partner Integration:
 - Go to the Redshift Console [here](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters).
 - Select the cluster your just created. 
 - In the top right corner, click on the "Add Partner Integration" button.
-- From the list of partners, select "Etleap". It should be the first option.
+- From the list of partners, select "Etleap". It should be the first option. Click "Next".
 - Leave all the settings as they are and click "Add partner".
 - This will take you to the Etleap console.
   - Confirm your Redshift password. Use the "Value" of "RedshiftClusterPasswordOutput" from your CloudFormation stack. Click "Validate and Setup Connection." 
   - Add your email address. This will send you a confirmation email. Click the link in the email to continue.
 - Fill in your details, and click "Create Account!"
-- Your account and connection are now ready to use. We'll go ahead, and set up more connection.
+- Your account and connection are now ready to use. We'll go ahead, and set up more connections.
 
-## 2.2 Ingesting data from SFTP sources
+## 3 Ingesting data from MongoDB sources
 
 In this section, we'll configure a SFTP connection, and create pipelines from it.
 
-### 2.2.1 Set up the SFTP Input connection
+### 3.1 Set up the MongoDB connection
 
-Use the search box to filter for SFTP, and click on the SFTP icon to create a new connection.
-Use the following values for the inputs
+Use the search box to filter for "SFTP", and click on the SFTP icon to create a new connection.
+Use the following values for the inputs:
 
 - Name: `Website Events`
-- Hostname: `test.dev.etleap.com`
-- Port: `2222` 
+- Hosts and Ports: `test.dev.etleap.com:27017`
+- Database: `webstore`
+- Authentication Database: `test` 
 - Username: `devdays`
 - Password: `i5eU2nZx4d`
 
+Let the 2 checkboxes unchecked.
+
 Click 'Save'. 
 
-This will take you to the list of files available in the SFTP connection.
+This will take you to the list of available collection in the MongoDB database.
 
-### 2.2.2 Create the SFTP Pipeline
+### 3.2 Create the MongoDB Pipeline
 
-- Select the `events` folder, and click the checkbox in the top-left corner. This will select all the files in the `events` folder.
+- Select the `web_events` collection folder.
 - Click 'Wrangle Data'.
 - Wrangle the data. 
   - The JSON object should already be parsed by the wrangler, and each key is a column.
   - The `timestamp` column needs to be loaded as a `datetime` object in the warehouse. Click on the column header. On the right hand side, the Wrangler will suggest "Interpret `timestamp` as date and time...". Select the option, then click "Add".
   - Select the `ip` column header, and the Wrangler will suggest the "Look up geolocation..." transform. Select it, and click "Add".
 - Click 'Next'.
-- Pick 'Amazon Redshift' as the destination.
-- Specify the following destination values:
-  - Table name: `Website_Events`
-  - Pipeline name: `Website Events`
+- Select "use existing schema" and select the "public" schema. Click Next.
+- Click Edit Settings, and specify the following destination values:
+  - Table name: `website_events`
+  - Pipeline name: `MongoDB Website Events`
 - Click 'Next'.
 - Click 'Start ETLing'.
 
 The pipeline is now set up.
 
-### 2.3 Set up the MySQL connection and pipelines
+Click "Show Dashboard". 
+You should be able to see, in the top right panel of the dashboard, that the MongoDB is now in progress.
+
+## 4 Set up the MySQL connection and pipelines
 
 ### 2.3.1 Set up the MySQL connection
 
+Click on the `+Create` button in the blue navbar.
+
 Use the search box to filter for MySQL, and click on the MySQL icon to create a new connection. 
-Use the following values as the input
+Use the following values as the input:
 
 - Name: `Webstore`
 - Connection Method: Direct
@@ -114,8 +129,8 @@ We'll create pipelines for all of them in a single workflow.
 
 - Select all the tables.
 - Click 'Next'.
-- Leave the settings as they are
-- Pick 'Amazon Redshift' as the destination.
+- Select "Use existing schema" and select the "public" schema. Click Next.
+- Click "Edit Settings". Here you can change the pipelines names if you want to. Or leave them as they are and click "Next". 
 - Leave all the options as their defaults in this step and click 'Next'.
 - Click 'Start ETLing'.
 
