@@ -57,7 +57,7 @@ We will set up the Redshift Connection using the Redshift Partner Integration:
   - Confirm your Redshift password. Use the same password you used when you created the Redshift Cluster. Click "Validate and Setup Connection."
   - Add your email address. This will send you a confirmation email. Click the link in the email to continue.
 - Fill in your details, and click "Create Account!"
-- Congratulation! Your account and connection are now ready to use. We'll go ahead, and set up more connections.
+- Congratulations! Your Etleap account and Redshift connection are now ready to use.
 
 ## 3 Ingesting data from MongoDB sources
 
@@ -75,11 +75,11 @@ Use the following values for the inputs:
 - Username: `devdays`
 - Password: `i5eU2nZx4d`
 
-Let the 2 checkboxes unchecked.
+Leave the 2 checkboxes unchecked.
 
 Click 'Save'. 
 
-This will take you to the list of available collection in the MongoDB database.
+This will take you to the list of available collections in the MongoDB database.
 
 ### 3.2 Create the MongoDB Pipeline
 
