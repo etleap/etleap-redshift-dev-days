@@ -152,7 +152,7 @@ Now that we have our data in Redshift we'll run a query that uses both datasets:
   - Database name: `dev`
   - Database user: `awsuser`
 
-You should now be redirected to the `Query Editor`. Enter the following query:
+- You should now be redirected to the `Query Editor`. Enter the following query:
 
 ```
 WITH spend_per_user AS (
@@ -172,7 +172,7 @@ ORDER BY spend_by_login desc
 LIMIT 10;
 ```
 
-Click 'Run'.
+- Click 'Run'.
 
 The above query takes a while to return the expected results.
 Let's see if we can improve on this with a Materialized View.
