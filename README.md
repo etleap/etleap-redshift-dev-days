@@ -16,6 +16,8 @@ You must have an AWS account and an [AWS Identity and Access Management (IAM)](h
 
 In this section we'll set up a new Redshift cluster.
 
+### 1.1 Creating a new cluster
+
 Log into your AWS account and [go to the Redshift Console](https://console.aws.amazon.com/redshiftv2/home?region=us-east-1#clusters). 
 
 - Make sure the AWS region selected is N. Virginia (us-east-1).
@@ -37,6 +39,12 @@ Click "Save Changes".
 It will take a few minutes for the cluster to become "Available".
 
 Once the cluster is "Available", you are ready to proceed to the next step. 
+
+### 1.2 Granting Etleap access to your new cluster
+
+In order to allow Etleap to connect to the cluster, you'll need to allow traffic from Etleap's IP addresses.
+
+For this, follow the instruction on our documentation page [here](https://docs.etleap.com/docs/documentation/ZG9jOjI0NTQ4MjY0-allow-inbound-access).
 
 ## 2. Connect Etleap to Redshift
 
