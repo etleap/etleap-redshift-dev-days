@@ -83,7 +83,7 @@ Use the following values for the inputs:
 - Username: `devdays`
 - Password: `i5eU2nZx4d`
 
-Leave the 2 checkboxes unchecked.
+Leave the "Use SSL" checkbox unchecked.
 
 Click 'Save'. 
 
