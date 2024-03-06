@@ -77,7 +77,7 @@ Use the search box to filter for "Mongo", and click on the MongoDB icon to creat
 Use the following values for the inputs:
 
 - Name: `Website Events`
-- Hosts and Ports: `test.dev.etleap.com:27017`
+- Replica Set: `test.dev.etleap.com:27017`
 - Database: `webstore`
 - Authentication Database: `test` 
 - Username: `devdays`
